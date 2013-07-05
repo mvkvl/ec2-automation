@@ -24,30 +24,33 @@ is fully automated [and takes now about 5 minutes].
 
 How To
 ------
-1. Start+bootstrap: *ecstart*.
+* Start+bootstrap: **ecstart**.
 This script creates EC2 instance, starts it and then runs [bootstrap script](https://github.com/mvkvl/startup/blob/master/bootstrap.sh)
  on this instance.
-```sh
-# ecstart
+
+<pre>
+$ ecstart
 ...
 ...
 EC2 instance i-abcdef12 is up and running
 connect to it with:
 ssh -i ~/.ec2/ec2-keypair ubuntu@w.x.y.z
-```
+</pre>
 
-2. List running instances: *eclist*
-```sh
-# eclist
+* List running instances: **eclist**
+
+<pre>
+$ eclist
 i-abc12def  t1.micro  a.b.c.d
 i-fed21cba  t1.micro  e.f.g.h
-```
+</pre>
 
-3. Stop running instance(s): *ecstop*
-```sh
-// stop defined instance(s)
-# ecstop i-abc12def i-fed21cba
+* Stop running instance(s): **ecstop**
 
-// stop all instances
-# ecstop
-```
+<pre>
+stop defined instance(s)
+$ ecstop i-abc12def i-fed21cba
+
+stop all instances
+$ ecstop
+</pre>
