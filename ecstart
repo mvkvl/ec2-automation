@@ -18,9 +18,6 @@ if [ -z "$EC2_INSTANCE" ]; then
  exit 1
 fi
 
-#sleep $WAIT
-
-
 # variable for checking instance initialization / startup
 VAR=0 
 
@@ -47,7 +44,7 @@ echo
 EC2_IP=`ec2-describe-instances --region $EC2_REGION $EC2_INSTANCE | grep INSTANCE | head -1 | awk '{print $14}'`
 
 # run startup.sh on newly created instance 
-ssh -o "StrictHostKeyChecking no" -i ~/.ec2/ec2-keypair ubuntu@$EC2_IP $BOOTSTRAP
+ssh -o "StrictHostKeyChecking no" -i $EC2_HOME/ec2-keypair ubuntu@$EC2_IP $BOOTSTRAP
 
 # log some information
 echo
@@ -55,5 +52,5 @@ echo
 echo "EC2 instance $EC2_INSTANCE is up and running"
 echo "connect to it with: "
 echo
-echo "ssh -i ~/.ec2/ec2-keypair ubuntu@$EC2_IP"
+echo "ssh -i $EC2_HOME/ec2-keypair ubuntu@$EC2_IP"
 echo

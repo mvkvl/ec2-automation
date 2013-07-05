@@ -1,0 +1,25 @@
+#!/bin/bash 
+
+if (( $# != 1 ))
+then
+  echo "ecssh - open SSH connection to Amazon EC2 instance"
+  echo
+  echo "Usage: ecssh <instance-id>"
+  echo
+  exit 1
+fi
+
+
+ID=$1
+EXISTS=`ec2dins --region $EC2_REGION $ID 2>/dev/null | wc -l`
+
+if [ "$EXISTS" -eq "0" ]
+then
+  echo "can't find instance $ID"
+  exit 2
+fi
+
+IP=`ec2-describe-instances --region $EC2_REGION $ID | grep INSTANCE | awk '{print $14}'`
+
+ssh -i $EC2_HOME/ec2-keypair ubuntu@$IP
+

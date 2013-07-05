@@ -54,3 +54,9 @@ $ ecstop i-abc12def i-fed21cba
 stop all instances
 $ ecstop
 </pre>
+
+* SSH to running instance: **ecssh**
+
+<pre>
+$ ecssh i-12345678
+</pre>
