@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd $EC2_HOME
+DATA=`ec2dins --region $EC2_REGION | grep i-`
+for str in `echo $DATA | tr ' ' ';' | sed 's/active/ /g'`;
+do
+ ID=`echo $str | tr ';' ' ' | awk '{print $2}'`
+ INST=`ec2-describe-instances --region $EC2_REGION $ID | grep INSTANCE`
+ IP=`echo $INST | awk '{print $14}'`
+ TYPE=`echo $INST | awk '{print $9}'`
+ echo "$ID  $TYPE  $IP"
+done

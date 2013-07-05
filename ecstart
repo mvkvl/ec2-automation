@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# goto EC2 home
+cd $EC2_HOME
+
+# set timeout interval 
+WAIT=10 # 10 seconds
+
+# run new instance
+EC2_INSTANCE=`ec2-run-instances $EC2_AMI -t $EC2_TYPE --region $EC2_REGION -k ec2-keypair | grep INSTANCE | head -1 | awk '{print $2}'`
+
+# if previous command was not successful,
+# i.e. instance is not starting, exit
+if [ -z "$EC2_INSTANCE" ]; then
+ echo "Can't start EC2 instance"
+ exit 1
+fi
+
+#sleep $WAIT
+
+BOOTSTRAP="curl https://raw.github.com/mvkvl/startup/master/bootstrap.sh | bash"
+
+# variable for checking instance initialization / startup
+VAR=0 
+
+echo -n "starting instance $EC2_INSTANCE "
+while [ "$VAR" = "0" ]
+do
+ echo -n "."
+ VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | wc -l`
+ sleep $WAIT
+done
+echo
+
+echo -n "initializing instance $EC2_INSTANCE "
+while [ "$VAR" != "0" ]
+do
+ echo -n "."
+#VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | grep INSTANCE | grep initializing | wc -l`
+ VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | grep initializing | wc -l`
+ sleep $WAIT
+done
+echo 
+
+# get new instance IP address
+EC2_IP=`ec2-describe-instances --region $EC2_REGION $EC2_INSTANCE | grep INSTANCE | head -1 | awk '{print $14}'`
+
+# run startup.sh on newly created instance 
+ssh -o "StrictHostKeyChecking no" -i ~/.ec2/ec2-keypair ubuntu@$EC2_IP $BOOTSTRAP
+
+# log some information
+echo
+echo
+echo "EC2 instance $EC2_INSTANCE is up and running"
+echo "connect to it with: "
+echo
+echo "ssh -i ~/.ec2/ec2-keypair ubuntu@$EC2_IP"
+echo

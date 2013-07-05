@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if (( $# > 0 ))
+then
+  for id in $@; do
+    ec2-terminate-instances --region $EC2_REGION $id
+  done
+else
+  echo "stopping all EC2 instances"
+  TOTAL=`ec2dins --region $EC2_REGION | grep i- | wc -l`
+  while [ "$TOTAL" != "0" ]
+  do
+   INSTANCE=`ec2dins --region $EC2_REGION | grep i- | head -1 | awk '{print $2}'`
+   ec2-terminate-instances --region $EC2_REGION $INSTANCE
+   sleep 5
+   TOTAL=`ec2dins --region $EC2_REGION | grep i- | wc -l`
+  done
+fi
