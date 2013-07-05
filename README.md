@@ -4,7 +4,7 @@ ec2-automation
 Scripts for automating Amazon EC2 instance creation / bootstrapping for coursera startup class.
 
 Setup
-=====
+-----
 
 1. At first add several additional environment variables to your ~/.bash_profile:
 ```sh
@@ -23,9 +23,9 @@ Done. Now creation, starting, bootstrapping and stopping of EC2 instances for [s
 is fully automated [and takes now about 5 minutes].
 
 How To
-======
-1. Start+bootstrap: ecstart
-this script creates EC2 instance, starts it and then runs [bootstrap script](https://github.com/mvkvl/startup/blob/master/bootstrap.sh)
+------
+1. Start+bootstrap: *ecstart*.
+This script creates EC2 instance, starts it and then runs [bootstrap script](https://github.com/mvkvl/startup/blob/master/bootstrap.sh)
  on this instance.
 ```sh
 # ecstart
@@ -35,17 +35,16 @@ EC2 instance i-abcdef12 is up and running
 connect to it with:
 
 ssh -i ~/.ec2/ec2-keypair ubuntu@w.x.y.z
-
 ```
 
-2. List running instances: eclist
+2. List running instances: *eclist*
 ```sh
 # eclist
 i-abc12def  t1.micro  a.b.c.d
 i-fed21cba  t1.micro  e.f.g.h
 ```
 
-3. Stop running instance(s): ecstop
+3. Stop running instance(s): *ecstop*
 ```sh
 // stop defined instance(s)
 # ecstop i-abc12def i-fed21cba
