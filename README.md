@@ -33,7 +33,6 @@ This script creates EC2 instance, starts it and then runs [bootstrap script](htt
 ...
 EC2 instance i-abcdef12 is up and running
 connect to it with:
-
 ssh -i ~/.ec2/ec2-keypair ubuntu@w.x.y.z
 ```
 
