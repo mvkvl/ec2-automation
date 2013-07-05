@@ -1,5 +1,7 @@
 #!/bin/bash
 
+BOOTSTRAP="curl https://raw.github.com/mvkvl/startup/master/bootstrap.sh | bash"
+
 # goto EC2 home
 cd $EC2_HOME
 
@@ -18,7 +20,6 @@ fi
 
 #sleep $WAIT
 
-BOOTSTRAP="curl https://raw.github.com/mvkvl/startup/master/bootstrap.sh | bash"
 
 # variable for checking instance initialization / startup
 VAR=0 
