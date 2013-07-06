@@ -11,8 +11,10 @@ Setup
 export EC2_AMI=ami-70f96e40 # AMI type used for the startup class
 export EC2_TYPE=t1.micro
 export EC2_REGION=us-west-2
+export DEV_SSH_KEY=/path/to/dev/key
 ```
-(for additional AMI types you can check [this link](http://cloud-images.ubuntu.com/releases/precise/release-20130411.1/)).
+$DEV_SSH_KEY should be registered on heroku and github.
+For additional AMI types you can check [this link](http://cloud-images.ubuntu.com/releases/precise/release-20130411.1/).
 
 2. Then setup [EC2 API Tools](http://aws.amazon.com/developertools/351) on your local machine as described 
 [here](http://www.robertsosinski.com/2008/01/26/starting-amazon-ec2-with-mac-os-x/).
