@@ -21,5 +21,5 @@ fi
 
 IP=`ec2-describe-instances --region $EC2_REGION $ID | grep INSTANCE | awk '{print $14}'`
 
-ssh -i $EC2_HOME/ec2-keypair ubuntu@$IP
+ssh -i $EC2_HOME/$EC2_KEY ubuntu@$IP
 
