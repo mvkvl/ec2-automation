@@ -19,7 +19,14 @@ For additional AMI types you can check [this link](http://cloud-images.ubuntu.co
 2. Then setup [EC2 API Tools](http://aws.amazon.com/developertools/351) on your local machine as described 
 [here](http://www.robertsosinski.com/2008/01/26/starting-amazon-ec2-with-mac-os-x/).
 
-3. Put scripts from this repo to some directory included in $PATH variable, so you can run them from anywhere.
+3. Add EC2 ssh-key (which you've created on step 2) environment variable to .bash_profile
+```sh
+export EC2_KEY=ec2-keypair
+```
+
+4. Put scripts from this repo to some directory included in $PATH variable, so you can run them from anywhere.
+
+5. Optionally you can set GIT_USER_NAME and GIT_USER_EMAIL variables in your .bash_profile
 
 Done. Now creation, starting, bootstrapping and stopping of EC2 instances for [startup class](https://class.coursera.org/startup-001/)
 is fully automated [and takes now about 5 minutes].
