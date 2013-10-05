@@ -1,12 +1,20 @@
 #!/bin/bash
 
+if [ ! -f ~/.ec2auto ]
+then
+    echo "configuration file not found ... check ~/.ec2auto"
+    exit 1
+fi
+
+source ~/.ec2auto
+
 if (( $# > 0 ))
 then
   for id in $@; do
     ec2-terminate-instances --region $EC2_REGION $id
   done
 else
-  echo "stopping all EC2 instances"
+  echo "stopping all EC2 instances in region $EC2_REGION"
   TOTAL=`ec2dins --region $EC2_REGION | grep i- | wc -l`
   while [ "$TOTAL" != "0" ]
   do

@@ -1,12 +1,26 @@
 #!/bin/bash
 
+if [ ! -f ~/.ec2auto ]
+then
+    echo "configuration file not found ... check ~/.ec2auto"
+    exit 1
+fi
+
+source ~/.ec2auto
+
 cd $EC2_HOME
 DATA=`ec2dins --region $EC2_REGION | grep i-`
 for str in `echo $DATA | tr ' ' ';' | sed 's/active/ /g'`;
 do
  ID=`echo $str | tr ';' ' ' | awk '{print $2}'`
+ #echo "---> ID   $ID"
  INST=`ec2-describe-instances --region $EC2_REGION $ID | grep INSTANCE`
+ #echo "---> INST $INST"
  IP=`echo $INST | awk '{print $14}'`
+ #echo "---> IP   $IP"
  TYPE=`echo $INST | awk '{print $9}'`
- echo "$ID  $TYPE  $IP"
+ #echo "---> TYPE $TYPE"
+ NAME=`ec2-describe-tags | grep $ID | grep Name | awk '{$1=$2=$3=$4=""; print $0}' | awk '{$1=$1}1'`
+ #echo "---> NAME $NAME"
+ echo "$ID  $TYPE  $IP  $NAME"
 done

@@ -1,21 +1,70 @@
 #!/bin/bash
 
-BOOTSTRAP_REMOTE="curl https://raw.github.com/mvkvl/startup/master/bootstrap.sh | bash"
+if [ ! -f ~/.ec2auto ]
+then
+    echo "configuration file not found ... check ~/.ec2auto"
+    exit 1
+fi
 
-# goto EC2 home
-cd $EC2_HOME
+source ~/.ec2auto
+
+if [ -z "$EC2_INSTANCE_USER" ]; then
+  EC_SSH_USER="ubuntu" # default user for AWS instance
+else
+  EC_SSH_USER=$EC2_INSTANCE_USER
+fi
+
+# we can provide bootstrap script as an argument
+# (it should be reachable via internet)
+if (( $# != 1 ))
+then
+  if [ -z "$EC2_BOOTSTRAP_SCRIPT" ]; then
+    # use default bootstrap script
+    BOOTSTRAP_COMMAND="export WP_URL=$WP_URL                              \
+                       export DYNDNS_UPDATE_CMD=\"$DYNDNS_UPDATE_CMD\";   \
+                       export MYSQL_ADMIN_PASSWORD=$MYSQL_ADMIN_PASSWORD; \
+                       export EC_HOSTNAME=$EC_HOSTNAME;                   \
+                       export EC_USERNAME=$EC_SSH_USER;                   \
+                       curl https://raw.github.com/mvkvl/bootstrap/master/bootstrap_min.sh | bash"
+  else
+    # use bootstrap script provided via environment variable
+    BOOTSTRAP_COMMAND="export WP_URL=$WP_URL                              \
+                       export DYNDNS_UPDATE_CMD=\"$DYNDNS_UPDATE_CMD\";   \
+                       export MYSQL_ADMIN_PASSWORD=$MYSQL_ADMIN_PASSWORD; \
+                       export EC_HOSTNAME=$EC_HOSTNAME;                   \
+                       export EC_USERNAME=$EC_SSH_USER;                   \
+                       curl $EC2_BOOTSTRAP_SCRIPT | bash"
+  fi
+else
+  # use provided bootstrap sript
+  BOOTSTRAP_COMMAND="export WP_URL=$WP_URL                                \
+                     export DYNDNS_UPDATE_CMD=\"$DYNDNS_UPDATE_CMD\";     \
+                     export MYSQL_ADMIN_PASSWORD=$MYSQL_ADMIN_PASSWORD;   \
+                     export EC_HOSTNAME=$EC_HOSTNAME;                     \
+                     export EC_USERNAME=$EC_SSH_USER;                     \
+                     curl $1 | bash"
+fi
 
 # set timeout interval 
 WAIT=10 # 10 seconds
 
+# define security group if not set
+if [ -z "$EC2_SECURITY_GROUP" ]; then
+  EC2_SECURITY_GROUP=default
+fi 
+
 # run new instance
-EC2_INSTANCE=`ec2-run-instances $EC2_AMI -t $EC2_TYPE --region $EC2_REGION -k $EC2_KEY | grep INSTANCE | head -1 | awk '{print $2}'`
+EC2_INSTANCE=`ec2-run-instances $EC2_AMI  \
+    --region $EC2_REGION                  \
+    -g       $EC2_SECURITY_GROUP          \
+    -t       $EC2_TYPE                    \
+    -k $EC2_KEY_NAME | grep INSTANCE | head -1 | awk '{print $2}'`
 
 # if previous command was not successful,
 # i.e. instance is not starting, exit
 if [ -z "$EC2_INSTANCE" ]; then
- echo "Can't start EC2 instance"
- exit 1
+  echo "Can't start EC2 instance"
+  exit 1
 fi
 
 # variable for checking instance initialization / startup
@@ -24,42 +73,52 @@ VAR=0
 echo -n "starting instance $EC2_INSTANCE "
 while [ "$VAR" = "0" ]
 do
- echo -n "."
- VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | wc -l`
- sleep $WAIT
+  echo -n "."
+  VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | wc -l`
+  sleep $WAIT
 done
 echo
 
 echo -n "initializing instance $EC2_INSTANCE "
 while [ "$VAR" != "0" ]
 do
- echo -n "."
-#VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | grep INSTANCE | grep initializing | wc -l`
- VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | grep initializing | wc -l`
- sleep $WAIT
+  echo -n "."
+# VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | grep INSTANCE | grep initializing | wc -l`
+  VAR=`ec2dins --region $EC2_REGION $EC2_INSTANCE | grep initializing | wc -l`
+  sleep $WAIT
 done
 echo 
+
+# now instance is up'n'running
+
+# set instance name
+if [ -n "$EC2_INSTANCE_NAME" ]; then
+  ec2addtag $EC2_INSTANCE --tag Name="$EC2_INSTANCE_NAME"
+fi
 
 # get new instance IP address
 EC2_IP=`ec2-describe-instances --region $EC2_REGION $EC2_INSTANCE | grep INSTANCE | head -1 | awk '{print $14}'`
 
 # run startup.sh on newly created instance 
-ssh -o "StrictHostKeyChecking no" -i $EC2_HOME/$EC2_KEY ubuntu@$EC2_IP $BOOTSTRAP_REMOTE
+echo "bootstrapping instance $EC2_INSTANCE"
+ssh -o "StrictHostKeyChecking no" -i $EC2_KEY_FILE ubuntu@$EC2_IP $BOOTSTRAP_COMMAND
 
 # copy ssh key registered on heroku & github to new instance
-scp -i $EC2_HOME/$EC2_KEY ${DEV_SSH_KEY}     ubuntu@$EC2_IP:~/.ssh/rsa_id
-scp -i $EC2_HOME/$EC2_KEY ${DEV_SSH_KEY}.pub ubuntu@$EC2_IP:~/.ssh/rsa_id.pub
+# scp -i $EC2_HOME/$EC2_KEY ${DEV_SSH_KEY}     ubuntu@$EC2_IP:~/.ssh/rsa_id
+# scp -i $EC2_HOME/$EC2_KEY ${DEV_SSH_KEY}.pub ubuntu@$EC2_IP:~/.ssh/rsa_id.pub
 
 # setup git on new instance
 if [ -z "$GIT_USER_NAME" ]
 then
-   GIT_USER_NAME=`git config --global user.name`
+  GIT_USER_NAME=`git config --global user.name`
 fi
+
 if [ -z "$GIT_USER_EMAIL" ]
 then
-   GIT_USER_EMAIL=`git config --global user.email`
+  GIT_USER_EMAIL=`git config --global user.email`
 fi
-ssh -o "StrictHostKeyChecking no" -i $EC2_HOME/$EC2_KEY ubuntu@$EC2_IP \
+
+ssh -o "StrictHostKeyChecking no" -i $EC2_KEY_FILE $EC_SSH_USER@$EC2_IP \
  "git config --global color.ui always;   
   git config --global user.name \"$GIT_USER_NAME\";
   git config --global user.email \"$GIT_USER_EMAIL\";"
@@ -70,5 +129,5 @@ echo
 echo "EC2 instance $EC2_INSTANCE is up and running"
 echo "connect to it with: "
 echo
-echo "ssh -i $EC2_HOME/$EC2_KEY ubuntu@$EC2_IP"
+echo "ssh -i $EC2_KEY_FILE $EC_SSH_USER@$EC2_IP"
 echo
